@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FAFAF7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ورقة ولعبة">
+  <meta name="description" content="حوّل ورقة العمل إلى لعبة للسبورة في دقيقة">
+  <title>ورقة ولعبة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap">
+  <!-- ?v= يجبر المتصفح على تحميل النسخة الجديدة بعد كل تحديث، ويجب أن يطابق رقم الإصدار في sw.js -->
+  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icons/favicon-64.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">ورقة ولعبة</div>
+    <ol class="steps" aria-label="الخطوات">
+      <li data-step="input"><span class="n">1</span><span class="t">الإدخال</span></li>
+      <li data-step="review"><span class="n">2</span><span class="t">المراجعة</span></li>
+      <li data-step="pick"><span class="n">3</span><span class="t">اللعبة</span></li>
+    </ol>
+    <button class="icon-btn" id="open-settings" aria-label="الإعدادات"></button>
+  </header>
+
+  <main class="wrap">
+    <!-- 1) الإدخال -->
+    <section id="screen-input" class="screen">
+      <div class="intro">
+        <h1>حوّل ورقة العمل إلى لعبة للسبورة</h1>
+        <p class="lead">ارفع ورقة العمل أو الصق أسئلتها، راجعها، ثم اختر اللعبة.</p>
+      </div>
+
+      <button class="resume" id="resume" hidden></button>
+
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tab-file" aria-selected="true" aria-controls="panel-file">رفع ملف</button>
+        <button role="tab" id="tab-text" aria-selected="false" aria-controls="panel-text">لصق نص</button>
+      </div>
+
+      <div class="panel" id="panel-file" role="tabpanel" aria-labelledby="tab-file">
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept="application/pdf,.pdf,image/png,image/jpeg,image/webp,image/gif,image/heic,.heic">
+          <span class="drop-icon" id="drop-icon"></span>
+          <strong>اختر ملف PDF أو صورة</strong>
+          <span class="muted">أو اسحب الملف إلى هنا</span>
+        </label>
+        <div class="status" id="ai-status" hidden>
+          <span class="spinner" aria-hidden="true"></span>
+          <div class="status-text">
+            <strong id="ai-file"></strong>
+            <span class="muted" id="ai-time">Claude يقرأ الورقة ويستخرج الأسئلة…</span>
+          </div>
+          <button class="btn" id="ai-cancel">إلغاء</button>
+        </div>
+        <div class="error" id="ai-error" role="alert" hidden></div>
+        <p class="hint" id="key-hint"></p>
+      </div>
+
+      <!-- بلا مفتاح ولا حساب Claude: يحوّل المعلم الورقة بأي مساعد ذكاء اصطناعي مجاني ثم يلصق الناتج -->
+      <div class="panel" id="panel-assist" role="tabpanel" aria-labelledby="tab-file" hidden>
+        <ol class="assist-steps">
+          <li><b>انسخ طلب التحويل</b><span class="muted">تعليمات جاهزة تشرح للمساعد الصيغة التي يفهمها التطبيق.</span></li>
+          <li><b>افتح أي مساعد ذكاء اصطناعي</b><span class="muted">مثل Claude، والصق الطلب وأرفق معه صورة الورقة أو ملف PDF.</span></li>
+          <li><b>انسخ ردّه والصقه هنا</b><span class="muted">في «لصق نص»، ثم راجع الأسئلة قبل اللعب.</span></li>
+        </ol>
+        <div class="actions">
+          <button class="btn primary" id="copy-prompt">انسخ طلب التحويل</button>
+          <button class="btn" id="to-paste">الصق الرد</button>
+        </div>
+        <textarea id="prompt-text" rows="8" readonly aria-label="طلب التحويل" hidden></textarea>
+        <p class="hint">لديك مفتاح Claude API؟ <button class="link" data-open="settings">أضفه من الإعدادات</button> ليقرأ التطبيق الملفات مباشرة.</p>
+      </div>
+
+      <div class="panel" id="panel-text" role="tabpanel" aria-labelledby="tab-text" hidden>
+        <textarea id="paste" rows="9" spellcheck="false" aria-label="الصق الأسئلة هنا" placeholder="س: ما الصيغة الكيميائية للماء؟&#10;* H2O&#10;- CO2&#10;&#10;ص: الحديد عنصر فلزي&#10;مصطلح: الذرة = أصغر جزء من العنصر يحمل خواصه"></textarea>
+        <details class="format">
+          <summary>طريقة الكتابة</summary>
+          <div class="help-slot"></div>
+        </details>
+        <div class="actions">
+          <button class="btn primary" id="paste-go">التالي: المراجعة</button>
+        </div>
+      </div>
+
+      <p class="sample"><button class="link" id="sample">جرّب بمثال جاهز</button></p>
+    </section>
+
+    <!-- 2) المراجعة -->
+    <section id="screen-review" class="screen" hidden>
+      <div class="head-row">
+        <button class="icon-btn" data-go="input" aria-label="رجوع"></button>
+        <h2 id="review-title">راجع الأسئلة</h2>
+      </div>
+      <p class="muted">صحّح أي سؤال أو إجابة قبل اللعب. التعديل يُحفظ تلقائياً.</p>
+      <div class="stats" id="summary"></div>
+      <div class="cost" id="cost" hidden></div>
+      <div class="warnings" id="warnings" hidden></div>
+      <textarea id="editor" rows="18" spellcheck="false" aria-label="الأسئلة"></textarea>
+      <details class="format">
+        <summary>طريقة الكتابة</summary>
+        <div class="help-slot"></div>
+      </details>
+      <div class="actions sticky">
+        <button class="btn primary" id="to-pick">التالي: اختر اللعبة</button>
+      </div>
+    </section>
+
+    <!-- 3) اختيار اللعبة -->
+    <section id="screen-pick" class="screen" hidden>
+      <div class="head-row">
+        <button class="icon-btn" data-go="review" aria-label="رجوع"></button>
+        <h2>اختر اللعبة</h2>
+      </div>
+      <div class="options">
+        <label class="switch"><input type="checkbox" id="opt-teams"><span class="track" aria-hidden="true"></span><span>فريقان: الأزرق والأحمر</span></label>
+        <label class="switch"><input type="checkbox" id="opt-timer"><span class="track" aria-hidden="true"></span><span>مؤقت 20 ثانية في سباق الفريقين</span></label>
+      </div>
+      <div class="game-grid" id="games"></div>
+      <div class="share" id="share-box" hidden>
+        <div class="share-text">
+          <b>شارك هذه الأسئلة</b>
+          <span class="muted small">رابط يفتح الألعاب مباشرة عند أي معلم، دون حساب.</span>
+        </div>
+        <button class="btn" id="share">مشاركة الرابط</button>
+        <textarea id="share-link" rows="3" readonly dir="ltr" aria-label="رابط المشاركة" hidden></textarea>
+      </div>
+    </section>
+  </main>
+
+  <div id="game" class="game" hidden></div>
+
+  <dialog id="settings" aria-labelledby="settings-title">
+    <form method="dialog" id="settings-form">
+      <h2 id="settings-title">الإعدادات</h2>
+      <label class="field">
+        <span>مفتاح Claude API</span>
+        <input id="api-key" type="password" dir="ltr" autocomplete="off" spellcheck="false" placeholder="sk-ant-…">
+      </label>
+      <p class="muted small">يُحفظ المفتاح في هذا المتصفح فقط، ويُرسل مباشرة إلى Anthropic عند قراءة ملف. تحصل عليه من <bdi dir="ltr">console.anthropic.com</bdi></p>
+      <section class="usage" aria-labelledby="usage-title">
+        <h3 id="usage-title">تكلفة قراءة الملفات</h3>
+        <div id="usage-body"></div>
+        <button class="link small" type="button" id="usage-reset">تصفير العداد</button>
+      </section>
+      <div class="actions">
+        <button class="btn primary" value="save" id="key-save">حفظ</button>
+        <button class="btn" type="button" id="key-clear">حذف المفتاح</button>
+        <button class="btn ghost" value="cancel" formnovalidate>إغلاق</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/core.js?v=2"></script>
+  <script src="js/ai.js?v=2"></script>
+  <script src="js/games.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "ورقة ولعبة",
+  "short_name": "ورقة ولعبة",
+  "description": "حوّل ورقة العمل إلى لعبة للسبورة في دقيقة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FAFAF7",
+  "theme_color": "#FAFAF7",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
